@@ -99,7 +99,7 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <div class="rounded-card border border-border-primary bg-bg-secondary p-4 md:p-5">
+    <div class="rounded-card border border-border-primary bg-bg-secondary p-4 md:relative md:left-1/2 md:w-[min(100vw-3rem,74rem)] md:-translate-x-1/2 md:p-5">
       <div v-if="currentScreenshot">
         <div class="overflow-hidden rounded-btn">
           <Transition name="hero-slide-ltr" mode="out-in">
