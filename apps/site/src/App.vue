@@ -7,7 +7,11 @@ import FooterSection from './components/FooterSection.vue';
 import HeroSection from './components/HeroSection.vue';
 import InstallSection from './components/InstallSection.vue';
 import ProblemSection from './components/ProblemSection.vue';
+import analysisDashboardScreenshot from './assets/features/analysis-dashboard-light.png';
+import issuesFilteredCriticalScreenshot from './assets/features/issues-filtered-critical-light.png';
 import metricsScreenshot from './assets/features/metrics-light.png';
+import portfolioFiltersScreenshot from './assets/features/portfolio-filters-light.png';
+import projectOverviewMetricsScreenshot from './assets/features/project-overview-metrics-light.png';
 
 type Locale = 'en' | 'fr';
 type Page = 'home' | 'docs';
@@ -50,6 +54,11 @@ type ProjectLabels = {
   footerIssuesLabel: string;
 };
 
+type HeroScreenshot = {
+  url: string;
+  alt: string;
+};
+
 type ProjectConfig = {
   projectName: string;
   tagline: string;
@@ -60,8 +69,7 @@ type ProjectConfig = {
   dockerComposeSnippet: string;
   statusLabel: string;
   heroSummary: string;
-  screenshotUrl?: string;
-  screenshotAlt: string;
+  heroScreenshots: HeroScreenshot[];
   problemLines: string[];
   architectureDiagram: string;
   architectureBullets: Array<{ title: string; description: string }>;
@@ -88,8 +96,13 @@ const projects: Record<Locale, ProjectConfig> = {
     dockerComposeSnippet: 'docker compose -f docker-compose.dev.yml up',
     statusLabel: 'Open source & self-hosted',
     heroSummary: 'Dashboard + API + Worker to centralize analysis and quality decisions.',
-    screenshotUrl: metricsScreenshot,
-    screenshotAlt: 'Qubeless dashboard metrics preview',
+    heroScreenshots: [
+      { url: metricsScreenshot, alt: 'Qubeless dashboard metrics preview' },
+      { url: projectOverviewMetricsScreenshot, alt: 'Qubeless project overview with key metrics' },
+      { url: analysisDashboardScreenshot, alt: 'Qubeless analysis dashboard overview' },
+      { url: portfolioFiltersScreenshot, alt: 'Qubeless portfolio filters view' },
+      { url: issuesFilteredCriticalScreenshot, alt: 'Qubeless critical issues filtered view' },
+    ],
     problemLines: [
       'Code quality tools are often scattered.',
       'CI/CD integration quickly becomes expensive to maintain.',
@@ -173,8 +186,13 @@ flowchart LR
     dockerComposeSnippet: 'docker compose -f docker-compose.dev.yml up',
     statusLabel: 'Open source & self-hosted',
     heroSummary: 'Dashboard + API + Worker pour centraliser les analyses et décisions qualité.',
-    screenshotUrl: metricsScreenshot,
-    screenshotAlt: 'Aperçu des métriques dans le dashboard Qubeless',
+    heroScreenshots: [
+      { url: metricsScreenshot, alt: 'Aperçu des métriques dans le dashboard Qubeless' },
+      { url: projectOverviewMetricsScreenshot, alt: 'Vue projet Qubeless avec indicateurs clés' },
+      { url: analysisDashboardScreenshot, alt: "Vue d'ensemble du dashboard d'analyse Qubeless" },
+      { url: portfolioFiltersScreenshot, alt: 'Vue des filtres portfolio dans Qubeless' },
+      { url: issuesFilteredCriticalScreenshot, alt: 'Liste des issues critiques filtrées dans Qubeless' },
+    ],
     problemLines: [
       'Les outils de qualité de code sont souvent dispersés.',
       'Leur intégration CI/CD devient vite coûteuse à maintenir.',
@@ -397,8 +415,7 @@ watch(
           :tagline="project.tagline"
           :status-label="project.statusLabel"
           :summary="project.heroSummary"
-          :screenshot-url="project.screenshotUrl"
-          :screenshot-alt="project.screenshotAlt"
+          :screenshots="project.heroScreenshots"
           :placeholder-aria-label="project.labels.screenshotPlaceholderAriaLabel"
           :placeholder-title="project.labels.screenshotPlaceholderTitle"
           :placeholder-text="project.labels.screenshotPlaceholderText"
