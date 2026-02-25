@@ -1,0 +1,7 @@
+*.md
+*.log
+*.xml
+*.json
+test_*
+examples/
+.env*

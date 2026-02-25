@@ -1,0 +1,777 @@
+/* Light Theme (Default) */
+:root {
+  /* Background colors */
+  --bg-primary: #f3f6fb;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f8fafc;
+
+  /* Text colors */
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-tertiary: #64748b;
+  --text-muted: #94a3b8;
+
+  /* Border colors */
+  --border-primary: #e2e8f0;
+  --border-secondary: #cbd5e1;
+  --border-hover: #94a3b8;
+
+  /* Sidebar colors */
+  --sidebar-bg-start: #0b2545;
+  --sidebar-bg-end: #16324f;
+  --sidebar-text: #e5ecf5;
+  --sidebar-text-secondary: #dfe7f3;
+  --sidebar-nav-hover: rgba(255, 255, 255, 0.12);
+  --sidebar-nav-border: rgba(255, 255, 255, 0.14);
+  --sidebar-nav-bg: rgba(255, 255, 255, 0.06);
+
+  /* Accent colors */
+  --accent: #4f46e5;
+  --accent-primary: #4f46e5;
+  --accent-secondary: #6366f1;
+  --accent-hover: #4338ca;
+
+  /* Card colors */
+  --card-bg-start: #ffffff;
+  --card-bg-end: #f8fafc;
+  --card-border: #e2e8f0;
+  --card-border-hover: #cbd5e1;
+  --card-shadow: rgba(15, 23, 42, 0.07);
+  --card-shadow-hover: rgba(15, 23, 42, 0.1);
+
+  /* Input colors */
+  --input-bg: #ffffff;
+  --input-border: #e2e8f0;
+  --input-border-hover: #cbd5e1;
+  --input-border-focus: #4f46e5;
+  --input-shadow-focus: rgba(79, 70, 229, 0.1);
+
+  /* Button colors */
+  --btn-bg-start: #4f46e5;
+  --btn-bg-end: #6366f1;
+  --btn-shadow: rgba(79, 70, 229, 0.2);
+  --btn-shadow-hover: rgba(79, 70, 229, 0.35);
+  --btn-shadow-active: rgba(79, 70, 229, 0.25);
+
+  /* Ghost button colors */
+  --ghost-btn-bg-start: #f8fafc;
+  --ghost-btn-bg-end: #f1f5f9;
+  --ghost-btn-text: #475569;
+  --ghost-btn-border: #cbd5e1;
+  --ghost-btn-shadow: rgba(0, 0, 0, 0.05);
+  --ghost-btn-bg-hover-start: #f1f5f9;
+  --ghost-btn-bg-hover-end: #e2e8f0;
+  --ghost-btn-border-hover: #94a3b8;
+  --ghost-btn-shadow-hover: rgba(0, 0, 0, 0.08);
+
+  /* Select dropdown arrow */
+  --select-arrow: #5b6476;
+
+  /* Login wrapper gradient */
+  --login-gradient-1: rgba(79, 70, 229, 0.08);
+  --login-gradient-2: rgba(14, 165, 233, 0.08);
+
+  /* Badge colors - Status */
+  --badge-success-bg-start: #ecfdf3;
+  --badge-success-bg-end: #d1fae5;
+  --badge-success-text: #166534;
+  --badge-success-border: #86efac;
+
+  --badge-running-bg-start: #fef9c3;
+  --badge-running-bg-end: #fef08a;
+  --badge-running-text: #854d0e;
+  --badge-running-border: #fde047;
+
+  --badge-failed-bg-start: #fee2e2;
+  --badge-failed-bg-end: #fecaca;
+  --badge-failed-text: #b91c1c;
+  --badge-failed-border: #fca5a5;
+
+  --badge-pending-bg-start: #e0f2fe;
+  --badge-pending-bg-end: #bae6fd;
+  --badge-pending-text: #075985;
+  --badge-pending-border: #7dd3fc;
+
+  /* Badge colors - Severity */
+  --badge-blocker-bg-start: #fee2e2;
+  --badge-blocker-bg-end: #fecaca;
+  --badge-blocker-text: #991b1b;
+  --badge-blocker-border: #fca5a5;
+
+  --badge-critical-bg-start: #fef3c7;
+  --badge-critical-bg-end: #fde68a;
+  --badge-critical-text: #92400e;
+  --badge-critical-border: #fcd34d;
+
+  --badge-major-bg-start: #dbeafe;
+  --badge-major-bg-end: #bfdbfe;
+  --badge-major-text: #075985;
+  --badge-major-border: #93c5fd;
+
+  --badge-minor-bg-start: #d1fae5;
+  --badge-minor-bg-end: #a7f3d0;
+  --badge-minor-text: #065f46;
+  --badge-minor-border: #6ee7b7;
+
+  --badge-info-bg-start: #f1f5f9;
+  --badge-info-bg-end: #e2e8f0;
+  --badge-info-text: #475569;
+  --badge-info-border: #cbd5e1;
+
+  /* Badge colors - Issue Status */
+  --badge-open-bg-start: #dbeafe;
+  --badge-open-bg-end: #bfdbfe;
+  --badge-open-text: #075985;
+  --badge-open-border: #93c5fd;
+
+  --badge-false-positive-bg-start: #fef3c7;
+  --badge-false-positive-bg-end: #fde68a;
+  --badge-false-positive-text: #92400e;
+  --badge-false-positive-border: #fcd34d;
+
+  --badge-accepted-risk-bg-start: #fed7aa;
+  --badge-accepted-risk-bg-end: #fdba74;
+  --badge-accepted-risk-text: #9a3412;
+  --badge-accepted-risk-border: #fb923c;
+
+  --badge-resolved-bg-start: #d1fae5;
+  --badge-resolved-bg-end: #a7f3d0;
+  --badge-resolved-text: #065f46;
+  --badge-resolved-border: #6ee7b7;
+
+  /* Badge colors - Type */
+  --badge-type-bg-start: #eef2ff;
+  --badge-type-bg-end: #e0e7ff;
+  --badge-type-text: #4338ca;
+  --badge-type-border: #c7d2fe;
+
+  /* Badge colors - New pill */
+  --badge-new-bg-start: #ecfdf3;
+  --badge-new-bg-end: #d1fae5;
+  --badge-new-text: #15803d;
+  --badge-new-border: #86efac;
+  --badge-new-shadow: rgba(21, 128, 61, 0.1);
+
+  /* Issue card */
+  --issue-card-bg-start: #ffffff;
+  --issue-card-bg-end: #f8fafc;
+  --issue-card-border: #e2e8f0;
+  --issue-card-border-hover: #cbd5e1;
+  --issue-card-shadow-hover: rgba(15, 23, 42, 0.08);
+
+  /* Issue menu */
+  --issue-menu-bg: #ffffff;
+  --issue-menu-border: #cbd5e1;
+  --issue-menu-shadow: rgba(0, 0, 0, 0.15);
+  --issue-menu-item-hover-bg: #f1f5f9;
+  --issue-menu-item-text: #334155;
+  --issue-menu-item-text-hover: #0f172a;
+
+  /* Dashboard status cards */
+  --status-card-bg-start: #ffffff;
+  --status-card-bg-end: #f8fafc;
+  --status-card-border: #e2e8f0;
+  --status-card-border-hover: #cbd5e1;
+  --status-card-label: #64748b;
+  --status-card-desc: #64748b;
+
+  /* List items */
+  --list-item-bg: #f8fbff;
+  --list-item-border: #d8e0ed;
+
+  /* Charts & legends */
+  --chart-bg-start: #ffffff;
+  --chart-bg-end: #f8fafc;
+  --chart-border: #e2e8f0;
+  --chart-grid: #e2e8f0;
+  --legend-bg-start: #f8fafc;
+  --legend-bg-end: #f1f5f9;
+  --legend-border: #e2e8f0;
+  --legend-text: #475569;
+  --legend-item-hover-bg: rgba(255, 255, 255, 0.6);
+
+  /* Error states */
+  --error-text: #b91c1c;
+  --error-text-dark: #b91c1c;
+  --error-bg: #fef2f2;
+  --error-border: #fecaca;
+
+  /* Code/Token display */
+  --code-bg: #0f172a;
+  --code-text: #e2e8f0;
+  --code-border: #1f2937;
+  --code-pill-bg: #111827;
+
+  /* Danger button */
+  --danger-text: #b91c1c;
+  --danger-border: #fecaca;
+
+  /* Tabs */
+  --tab-text: #ffffff;
+  --tab-text-active: #ffffff;
+  --tab-border-active: #4f46e5;
+  --tab-bg-hover: #f1f5f9;
+
+  /* Forms & modals */
+  --modal-overlay: rgba(0, 0, 0, 0.5);
+  --modal-bg: #ffffff;
+  --modal-border: #e2e8f0;
+
+  /* Table/Grid rows */
+  --row-hover-bg: #f8fafc;
+  --row-border: #e2e8f0;
+
+  /* Info boxes */
+  --info-bg: #eff6ff;
+  --info-border: #bfdbfe;
+  --info-text: #1e40af;
+
+  /* Warning boxes */
+  --warning-bg: #fef3c7;
+  --warning-border: #fde68a;
+  --warning-text: #92400e;
+
+  /* Success boxes */
+  --success-bg: #ecfdf5;
+  --success-border: #a7f3d0;
+  --success-text: #065f46;
+
+  /* Neutral/secondary cards */
+  --secondary-card-bg: #f8fafc;
+  --secondary-card-border: #e2e8f0;
+  --secondary-card-text: #475569;
+
+  /* Disabled states */
+  --disabled-bg: #f1f5f9;
+  --disabled-text: #94a3b8;
+  --disabled-border: #e2e8f0;
+
+  /* Primary color variants */
+  --primary: #4f46e5;
+  --primary-dark: #4338ca;
+  --primary-light: #6366f1;
+  --primary-shadow: rgba(79, 70, 229, 0.1);
+  --primary-shadow-hover: rgba(79, 70, 229, 0.3);
+
+  /* Button text */
+  --button-text: #ffffff;
+
+  /* Dashboard status card variants */
+  --status-card-dark-bg-start: #0b2545;
+  --status-card-dark-bg-end: #16324f;
+  --status-card-dark-text: #e5ecf5;
+  --status-card-dark-border: #1e3a5f;
+  --status-card-dark-border-hover: #2d4a6f;
+  --status-card-dark-shadow: rgba(11, 37, 69, 0.4);
+  --status-card-dark-label: #c3d0e8;
+  --status-card-dark-desc: #cbd5e1;
+
+  --status-card-error-bg-start: #7f1d1d;
+  --status-card-error-bg-end: #991b1b;
+  --status-card-error-border: #b91c1c;
+  --status-card-error-border-hover: #dc2626;
+  --status-card-error-shadow: rgba(127, 29, 29, 0.4);
+
+  --status-card-warning-bg-start: #78350f;
+  --status-card-warning-bg-end: #92400e;
+  --status-card-warning-border: #b45309;
+  --status-card-warning-border-hover: #d97706;
+  --status-card-warning-shadow: rgba(120, 53, 15, 0.4);
+
+  --status-card-cta-border: #c7d2fe;
+  --status-card-cta-bg-start: #f5f3ff;
+  --status-card-cta-bg-end: #ede9fe;
+  --status-card-cta-border-hover: #a5b4fc;
+
+  /* Filter chips */
+  --filter-chip-border: #c7d2fe;
+  --filter-chip-bg-start: #eef2ff;
+  --filter-chip-bg-end: #e0e7ff;
+  --filter-chip-text: #4338ca;
+  --filter-chip-shadow: rgba(79, 70, 229, 0.1);
+  --filter-chip-border-hover: #a5b4fc;
+  --filter-chip-shadow-hover: rgba(79, 70, 229, 0.15);
+  --filter-chip-active-bg-start: #4f46e5;
+  --filter-chip-active-bg-end: #6366f1;
+  --filter-chip-active-text: #ffffff;
+  --filter-chip-active-border: #4f46e5;
+  --filter-chip-active-shadow: rgba(79, 70, 229, 0.3);
+
+  /* Toggle switch */
+  --toggle-bg: #e2e8f0;
+  --toggle-border: #cbd5e1;
+  --toggle-knob: #ffffff;
+  --toggle-knob-shadow: rgba(0, 0, 0, 0.1);
+  --toggle-checked-bg: rgba(79, 70, 229, 0.15);
+  --toggle-checked-border: rgba(79, 70, 229, 0.6);
+  --toggle-checked-knob: #4f46e5;
+  --toggle-checked-knob-shadow: rgba(79, 70, 229, 0.35);
+
+  /* Danger states */
+  --danger-bg: #fee2e2;
+  --danger-text-dark: #b91c1c;
+
+  /* Tab hover states */
+  --tab-hover-bg-start: #4f46e5;
+  --tab-hover-bg-end: #6366f1;
+  --tab-text-hover: #ffffff;
+  --tab-border: #e2e8f0;
+
+  /* Trend bars */
+  --trend-bar-bg: #e2e8f0;
+
+  /* Success color variants */
+  --success-bg-light: #f0fdf4;
+  --success-text-dark: #166534;
+  --success-bg-dark: #16a34a;
+  --success-bg-darker: #15803d;
+  --success-text-light: #ffffff;
+  --success-shadow: rgba(22, 163, 74, 0.2);
+  --success-shadow-hover: rgba(22, 163, 74, 0.3);
+
+  /* Warning color variants */
+  --warning-bg-light: #fefce8;
+  --warning-text-dark: #854d0e;
+
+  /* Badge shadows */
+  --badge-success-shadow: rgba(22, 101, 52, 0.1);
+  --badge-failed-shadow: rgba(185, 28, 28, 0.1);
+
+  /* Info badges */
+  --info-bg-start: #eff6ff;
+  --info-bg-end: #dbeafe;
+  --info-text: #1e40af;
+  --info-border: #93c5fd;
+  --info-shadow: rgba(30, 64, 175, 0.1);
+
+  /* Badge type variants */
+  --badge-vulnerability-bg-start: #fef2f2;
+  --badge-vulnerability-bg-end: #fee2e2;
+  --badge-vulnerability-text: #991b1b;
+  --badge-vulnerability-border: #fca5a5;
+
+  --badge-bug-bg-start: #fef3c7;
+  --badge-bug-bg-end: #fde68a;
+  --badge-bug-text: #92400e;
+  --badge-bug-border: #fcd34d;
+
+  --badge-codesmell-bg-start: #eff6ff;
+  --badge-codesmell-bg-end: #dbeafe;
+  --badge-codesmell-text: #1e40af;
+  --badge-codesmell-border: #93c5fd;
+
+  /* Badge status variants */
+  --badge-falsepositive-bg-start: #fef3c7;
+  --badge-falsepositive-bg-end: #fde68a;
+  --badge-falsepositive-text: #92400e;
+  --badge-falsepositive-border: #fcd34d;
+
+  --badge-acceptedrisk-bg-start: #fed7aa;
+  --badge-acceptedrisk-bg-end: #fdba74;
+  --badge-acceptedrisk-text: #9a3412;
+  --badge-acceptedrisk-border: #fb923c;
+
+  --badge-resolved-bg-start: #d1fae5;
+  --badge-resolved-bg-end: #a7f3d0;
+  --badge-resolved-text: #065f46;
+  --badge-resolved-border: #6ee7b7;
+
+  /* Log viewer */
+  --log-bg: #0f172a;
+  --log-text: #e2e8f0;
+  --log-border: #1e293b;
+  --log-shadow: rgba(0, 0, 0, 0.2);
+
+  /* Modal */
+  --modal-overlay-bg: rgba(0, 0, 0, 0.5);
+  --modal-shadow: rgba(0, 0, 0, 0.3);
+}
+
+/* Dark Theme */
+[data-theme='dark'] {
+  /* Background colors */
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-tertiary: #334155;
+
+  /* Text colors */
+  --text-primary: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --text-tertiary: #94a3b8;
+  --text-muted: #64748b;
+
+  /* Border colors */
+  --border-primary: #334155;
+  --border-secondary: #475569;
+  --border-hover: #64748b;
+
+  /* Sidebar colors */
+  --sidebar-bg-start: #020617;
+  --sidebar-bg-end: #0f172a;
+  --sidebar-text: #f1f5f9;
+  --sidebar-text-secondary: #e2e8f0;
+  --sidebar-nav-hover: rgba(255, 255, 255, 0.1);
+  --sidebar-nav-border: rgba(255, 255, 255, 0.1);
+  --sidebar-nav-bg: rgba(255, 255, 255, 0.05);
+
+  /* Accent colors (slightly brighter for dark mode) */
+  --accent: #5ca3f5;
+  --accent-primary: #5ca3f5;
+  --accent-secondary: #7bb3f7;
+  --accent-hover: #4a90e2;
+
+  /* Card colors */
+  --card-bg-start: #1e293b;
+  --card-bg-end: #334155;
+  --card-border: #334155;
+  --card-border-hover: #475569;
+  --card-shadow: rgba(0, 0, 0, 0.3);
+  --card-shadow-hover: rgba(0, 0, 0, 0.4);
+
+  /* Input colors */
+  --input-bg: #1e293b;
+  --input-border: #334155;
+  --input-border-hover: #475569;
+  --input-border-focus: #5ca3f5;
+  --input-shadow-focus: rgba(92, 163, 245, 0.2);
+
+  /* Button colors */
+  --btn-bg-start: #5ca3f5;
+  --btn-bg-end: #7bb3f7;
+  --btn-shadow: rgba(92, 163, 245, 0.3);
+  --btn-shadow-hover: rgba(92, 163, 245, 0.4);
+  --btn-shadow-active: rgba(92, 163, 245, 0.35);
+
+  /* Ghost button colors */
+  --ghost-btn-bg-start: #334155;
+  --ghost-btn-bg-end: #475569;
+  --ghost-btn-text: #e2e8f0;
+  --ghost-btn-border: #475569;
+  --ghost-btn-shadow: rgba(0, 0, 0, 0.2);
+  --ghost-btn-bg-hover-start: #475569;
+  --ghost-btn-bg-hover-end: #64748b;
+  --ghost-btn-border-hover: #64748b;
+  --ghost-btn-shadow-hover: rgba(0, 0, 0, 0.3);
+
+  /* Select dropdown arrow */
+  --select-arrow: #94a3b8;
+
+  /* Login wrapper gradient */
+  --login-gradient-1: rgba(92, 163, 245, 0.1);
+  --login-gradient-2: rgba(14, 165, 233, 0.1);
+
+  /* Badge colors - Status (dark mode with better contrast) */
+  --badge-success-bg-start: #064e3b;
+  --badge-success-bg-end: #065f46;
+  --badge-success-text: #a7f3d0;
+  --badge-success-border: #10b981;
+
+  --badge-running-bg-start: #713f12;
+  --badge-running-bg-end: #854d0e;
+  --badge-running-text: #fde68a;
+  --badge-running-border: #fbbf24;
+
+  --badge-failed-bg-start: #7f1d1d;
+  --badge-failed-bg-end: #991b1b;
+  --badge-failed-text: #fecaca;
+  --badge-failed-border: #ef4444;
+
+  --badge-pending-bg-start: #0c4a6e;
+  --badge-pending-bg-end: #075985;
+  --badge-pending-text: #bae6fd;
+  --badge-pending-border: #0ea5e9;
+
+  /* Badge colors - Severity (dark mode with better contrast) */
+  --badge-blocker-bg-start: #7f1d1d;
+  --badge-blocker-bg-end: #991b1b;
+  --badge-blocker-text: #fecaca;
+  --badge-blocker-border: #ef4444;
+
+  --badge-critical-bg-start: #78350f;
+  --badge-critical-bg-end: #92400e;
+  --badge-critical-text: #fde68a;
+  --badge-critical-border: #f59e0b;
+
+  --badge-major-bg-start: #0c4a6e;
+  --badge-major-bg-end: #075985;
+  --badge-major-text: #bfdbfe;
+  --badge-major-border: #3b82f6;
+
+  --badge-minor-bg-start: #064e3b;
+  --badge-minor-bg-end: #065f46;
+  --badge-minor-text: #a7f3d0;
+  --badge-minor-border: #10b981;
+
+  --badge-info-bg-start: #334155;
+  --badge-info-bg-end: #475569;
+  --badge-info-text: #e2e8f0;
+  --badge-info-border: #64748b;
+
+  /* Badge colors - Issue Status (dark mode with better contrast) */
+  --badge-open-bg-start: #0c4a6e;
+  --badge-open-bg-end: #075985;
+  --badge-open-text: #bfdbfe;
+  --badge-open-border: #3b82f6;
+
+  --badge-false-positive-bg-start: #78350f;
+  --badge-false-positive-bg-end: #92400e;
+  --badge-false-positive-text: #fde68a;
+  --badge-false-positive-border: #f59e0b;
+
+  --badge-accepted-risk-bg-start: #7c2d12;
+  --badge-accepted-risk-bg-end: #9a3412;
+  --badge-accepted-risk-text: #fdba74;
+  --badge-accepted-risk-border: #f97316;
+
+  --badge-resolved-bg-start: #064e3b;
+  --badge-resolved-bg-end: #065f46;
+  --badge-resolved-text: #a7f3d0;
+  --badge-resolved-border: #10b981;
+
+  /* Badge colors - Type (dark mode with better contrast) */
+  --badge-type-bg-start: #3730a3;
+  --badge-type-bg-end: #4338ca;
+  --badge-type-text: #e0e7ff;
+  --badge-type-border: #6366f1;
+
+  /* Badge colors - New pill (dark mode with better contrast) */
+  --badge-new-bg-start: #064e3b;
+  --badge-new-bg-end: #065f46;
+  --badge-new-text: #86efac;
+  --badge-new-border: #10b981;
+  --badge-new-shadow: rgba(16, 185, 129, 0.2);
+
+  /* Issue card (dark mode) */
+  --issue-card-bg-start: #1e293b;
+  --issue-card-bg-end: #334155;
+  --issue-card-border: #475569;
+  --issue-card-border-hover: #64748b;
+  --issue-card-shadow-hover: rgba(0, 0, 0, 0.3);
+
+  /* Issue menu (dark mode) */
+  --issue-menu-bg: #1e293b;
+  --issue-menu-border: #475569;
+  --issue-menu-shadow: rgba(0, 0, 0, 0.4);
+  --issue-menu-item-hover-bg: #334155;
+  --issue-menu-item-text: #cbd5e1;
+  --issue-menu-item-text-hover: #f1f5f9;
+
+  /* Dashboard status cards (dark mode) */
+  --status-card-bg-start: #1e293b;
+  --status-card-bg-end: #334155;
+  --status-card-border: #475569;
+  --status-card-border-hover: #64748b;
+  --status-card-label: #94a3b8;
+  --status-card-desc: #cbd5e1;
+
+  /* List items (dark mode) */
+  --list-item-bg: #1e293b;
+  --list-item-border: #475569;
+
+  /* Charts & legends (dark mode) */
+  --chart-bg-start: #1e293b;
+  --chart-bg-end: #334155;
+  --chart-border: #475569;
+  --chart-grid: #475569;
+  --legend-bg-start: #1e293b;
+  --legend-bg-end: #334155;
+  --legend-border: #475569;
+  --legend-text: #cbd5e1;
+  --legend-item-hover-bg: rgba(255, 255, 255, 0.1);
+
+  /* Error states (dark mode) */
+  --error-text: #fecaca;
+  --error-text-dark: #fca5a5;
+  --error-bg: #7f1d1d;
+  --error-border: #991b1b;
+
+  /* Code/Token display (dark mode - keep dark for visibility) */
+  --code-bg: #111827;
+  --code-text: #e2e8f0;
+  --code-border: #374151;
+  --code-pill-bg: #1f2937;
+
+  /* Danger button (dark mode) */
+  --danger-text: #fca5a5;
+  --danger-border: #991b1b;
+
+  /* Tabs (dark mode) */
+  --tab-text: #ffffff;
+  --tab-text-active: #ffffff;
+  --tab-border-active: #5ca3f5;
+  --tab-bg-hover: #334155;
+
+  /* Forms & modals (dark mode) */
+  --modal-overlay: rgba(0, 0, 0, 0.7);
+  --modal-bg: #1e293b;
+  --modal-border: #475569;
+
+  /* Table/Grid rows (dark mode) */
+  --row-hover-bg: #334155;
+  --row-border: #475569;
+
+  /* Info boxes (dark mode) */
+  --info-bg: #1e3a8a;
+  --info-border: #3b82f6;
+  --info-text: #bfdbfe;
+
+  /* Warning boxes (dark mode) */
+  --warning-bg: #78350f;
+  --warning-border: #f59e0b;
+  --warning-text: #fde68a;
+
+  /* Success boxes (dark mode) */
+  --success-bg: #064e3b;
+  --success-border: #10b981;
+  --success-text: #a7f3d0;
+
+  /* Neutral/secondary cards (dark mode) */
+  --secondary-card-bg: #334155;
+  --secondary-card-border: #475569;
+  --secondary-card-text: #cbd5e1;
+
+  /* Disabled states (dark mode) */
+  --disabled-bg: #334155;
+  --disabled-text: #64748b;
+  --disabled-border: #475569;
+
+  /* Primary color variants (dark mode - brighter for better visibility) */
+  --primary: #5ca3f5;
+  --primary-dark: #4a90e2;
+  --primary-light: #7bb3f7;
+  --primary-shadow: rgba(92, 163, 245, 0.2);
+  --primary-shadow-hover: rgba(92, 163, 245, 0.4);
+
+  /* Button text (dark mode) */
+  --button-text: #0f172a;
+
+  /* Dashboard status card variants (dark mode) */
+  --status-card-dark-bg-start: #0c1f3a;
+  --status-card-dark-bg-end: #1a2f4a;
+  --status-card-dark-text: #cbd5e1;
+  --status-card-dark-border: #334155;
+  --status-card-dark-border-hover: #475569;
+  --status-card-dark-shadow: rgba(0, 0, 0, 0.5);
+  --status-card-dark-label: #94a3b8;
+  --status-card-dark-desc: #cbd5e1;
+
+  --status-card-error-bg-start: #7f1d1d;
+  --status-card-error-bg-end: #991b1b;
+  --status-card-error-border: #dc2626;
+  --status-card-error-border-hover: #ef4444;
+  --status-card-error-shadow: rgba(127, 29, 29, 0.6);
+
+  --status-card-warning-bg-start: #78350f;
+  --status-card-warning-bg-end: #92400e;
+  --status-card-warning-border: #d97706;
+  --status-card-warning-border-hover: #f59e0b;
+  --status-card-warning-shadow: rgba(120, 53, 15, 0.6);
+
+  --status-card-cta-border: #6366f1;
+  --status-card-cta-bg-start: #312e81;
+  --status-card-cta-bg-end: #3730a3;
+  --status-card-cta-border-hover: #818cf8;
+
+  /* Filter chips (dark mode) */
+  --filter-chip-border: #6366f1;
+  --filter-chip-bg-start: #3730a3;
+  --filter-chip-bg-end: #4338ca;
+  --filter-chip-text: #e0e7ff;
+  --filter-chip-shadow: rgba(99, 102, 241, 0.2);
+  --filter-chip-border-hover: #818cf8;
+  --filter-chip-shadow-hover: rgba(99, 102, 241, 0.3);
+  --filter-chip-active-bg-start: #5ca3f5;
+  --filter-chip-active-bg-end: #7bb3f7;
+  --filter-chip-active-text: #0f172a;
+  --filter-chip-active-border: #5ca3f5;
+  --filter-chip-active-shadow: rgba(92, 163, 245, 0.4);
+
+  /* Toggle switch (dark mode) */
+  --toggle-bg: #475569;
+  --toggle-border: #64748b;
+  --toggle-knob: #f1f5f9;
+  --toggle-knob-shadow: rgba(0, 0, 0, 0.3);
+  --toggle-checked-bg: rgba(92, 163, 245, 0.25);
+  --toggle-checked-border: rgba(92, 163, 245, 0.8);
+  --toggle-checked-knob: #5ca3f5;
+  --toggle-checked-knob-shadow: rgba(92, 163, 245, 0.5);
+
+  /* Danger states (dark mode) */
+  --danger-bg: #7f1d1d;
+  --danger-text-dark: #fecaca;
+
+  /* Tab hover states (dark mode) */
+  --tab-hover-bg-start: #4a90e2;
+  --tab-hover-bg-end: #5ca3f5;
+  --tab-text-hover: #ffffff;
+  --tab-border: #475569;
+
+  /* Trend bars (dark mode) */
+  --trend-bar-bg: #475569;
+
+  /* Success color variants (dark mode) */
+  --success-bg-light: #065f46;
+  --success-text-dark: #a7f3d0;
+  --success-bg-dark: #10b981;
+  --success-bg-darker: #059669;
+  --success-text-light: #0f172a;
+  --success-shadow: rgba(16, 185, 129, 0.3);
+  --success-shadow-hover: rgba(16, 185, 129, 0.4);
+
+  /* Warning color variants (dark mode) */
+  --warning-bg-light: #854d0e;
+  --warning-text-dark: #fde68a;
+
+  /* Badge shadows (dark mode) */
+  --badge-success-shadow: rgba(16, 185, 129, 0.3);
+  --badge-failed-shadow: rgba(239, 68, 68, 0.3);
+
+  /* Info badges (dark mode) */
+  --info-bg-start: #1e3a8a;
+  --info-bg-end: #1e40af;
+  --info-text: #bfdbfe;
+  --info-border: #3b82f6;
+  --info-shadow: rgba(59, 130, 246, 0.2);
+
+  /* Badge type variants (dark mode) */
+  --badge-vulnerability-bg-start: #7f1d1d;
+  --badge-vulnerability-bg-end: #991b1b;
+  --badge-vulnerability-text: #fecaca;
+  --badge-vulnerability-border: #ef4444;
+
+  --badge-bug-bg-start: #78350f;
+  --badge-bug-bg-end: #92400e;
+  --badge-bug-text: #fde68a;
+  --badge-bug-border: #f59e0b;
+
+  --badge-codesmell-bg-start: #1e3a8a;
+  --badge-codesmell-bg-end: #1e40af;
+  --badge-codesmell-text: #bfdbfe;
+  --badge-codesmell-border: #3b82f6;
+
+  /* Badge status variants (dark mode) */
+  --badge-falsepositive-bg-start: #78350f;
+  --badge-falsepositive-bg-end: #92400e;
+  --badge-falsepositive-text: #fde68a;
+  --badge-falsepositive-border: #f59e0b;
+
+  --badge-acceptedrisk-bg-start: #7c2d12;
+  --badge-acceptedrisk-bg-end: #9a3412;
+  --badge-acceptedrisk-text: #fdba74;
+  --badge-acceptedrisk-border: #f97316;
+
+  --badge-resolved-bg-start: #064e3b;
+  --badge-resolved-bg-end: #065f46;
+  --badge-resolved-text: #a7f3d0;
+  --badge-resolved-border: #10b981;
+
+  /* Log viewer (dark mode - keep very dark for code readability) */
+  --log-bg: #020617;
+  --log-text: #e2e8f0;
+  --log-border: #334155;
+  --log-shadow: rgba(0, 0, 0, 0.4);
+
+  /* Modal (dark mode) */
+  --modal-overlay-bg: rgba(0, 0, 0, 0.7);
+  --modal-shadow: rgba(0, 0, 0, 0.5);
+}

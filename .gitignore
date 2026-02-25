@@ -1,0 +1,69 @@
+# Dependencies
+node_modules
+
+# Builds
+dist
+build
+.turbo
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Env
+.env
+.env.*
+.env.local
+.env.*.local
+.env*
+!.env.example
+!**/.env.example
+
+# Editor
+.DS_Store
+*.swp
+*.swo
+*.idea
+.vscode
+# Production environment files
+.env.production
+.env.prod
+volumes/
+backups/
+
+# ROADMAP
+ROADMAP.md
+# Code Coverage
+apps/api/coverage
+/coverage/
+*.lcov
+.nyc_output/
+out/
+test-output/
+analyzers/*/test-output/
+audit-report.json
+*.bak
+# Examples
+examples/
+
+# Local workspace artifacts
+Agents.md
+CODEX_SESSION_TODO_*.md
+*_COVERAGE_PLAN.md
+tests.log
+
+# Local tooling caches
+.claude/
+.codex/
+.pnpm-store/
+.npm/
+.cache/
+.eslintcache
+*.tsbuildinfo
+
+# Cypress artifacts
+apps/web/cypress/videos/
+apps/web/cypress/screenshots/
+new_repo.sh

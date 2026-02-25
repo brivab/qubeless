@@ -1,0 +1,5 @@
+test-output/
+*.log
+README.md
+test.sh
+.env*

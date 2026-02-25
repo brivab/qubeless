@@ -1,0 +1,380 @@
+version: "3.9"
+
+services:
+  # PostgreSQL Database (LOCAL ONLY)
+  postgres:
+    image: postgres:15-alpine
+    container_name: qubeless-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?error}
+      POSTGRES_DB: ${POSTGRES_DB:-qubeless}
+      POSTGRES_INITDB_ARGS: "-E UTF8 --locale=en_US.utf8"
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ${DATA_DIR:-.}/backups/postgres:/backups
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - qubeless-network
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 2G
+        reservations:
+          cpus: "1"
+          memory: 1G
+
+  # Redis Cache & Queue (LOCAL ONLY)
+  redis:
+    image: redis:7-alpine
+    container_name: qubeless-redis
+    restart: always
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    ports:
+      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - qubeless-network
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 768M
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+
+  # MinIO Object Storage (LOCAL ONLY)
+  minio:
+    image: minio/minio:latest
+    container_name: qubeless-minio
+    restart: always
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?error}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?error}
+      MINIO_BROWSER_LOGIN_ANIMATION: "off"
+    command: server /data --console-address ":9001"
+    ports:
+      - "127.0.0.1:${MINIO_PORT:-9000}:9000"
+      - "127.0.0.1:${MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - minio_data:/data
+      - ${DATA_DIR:-.}/backups/minio:/backups
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "if command -v curl >/dev/null 2>&1; then curl -fsS http://127.0.0.1:9000/minio/health/live >/dev/null; elif command -v wget >/dev/null 2>&1; then wget -qO- http://127.0.0.1:9000/minio/health/live >/dev/null; elif command -v mc >/dev/null 2>&1; then mc ready local >/dev/null; else exit 1; fi",
+        ]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+      start_period: 30s
+    networks:
+      - qubeless-network
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 1G
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+
+  # API Backend (LOCAL ONLY)
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      cache_from:
+        - qubeless/api:latest
+    image: qubeless/api:${VERSION:-latest}
+    container_name: qubeless-api
+    restart: always
+    environment:
+      NODE_ENV: production
+      PORT: ${API_PORT:-3001}
+      HOST: 0.0.0.0
+
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:?error}@postgres:5432/${POSTGRES_DB:-qubeless}
+
+      JWT_SECRET: ${JWT_SECRET:?error}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      MFA_ISSUER: ${MFA_ISSUER:-Qubeless}
+
+      ADMIN_EMAIL: ${ADMIN_EMAIL:?error}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?error}
+
+      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:?error}
+
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_PUBLIC_ENDPOINT: ${MINIO_PUBLIC_ENDPOINT:?error}
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:?error}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:?error}
+      MINIO_BUCKET_SOURCES: ${MINIO_BUCKET_SOURCES:-sources}
+      MINIO_BUCKET_ARTIFACTS: ${MINIO_BUCKET_ARTIFACTS:-artifacts}
+      VCS_TOKEN_ENCRYPTION_KEY: ${VCS_TOKEN_ENCRYPTION_KEY:?error}
+      LLM_PROVIDER_ENCRYPTION_KEY: ${LLM_PROVIDER_ENCRYPTION_KEY:?error}
+      CHAT_WEBHOOK_ENCRYPTION_KEY: ${CHAT_WEBHOOK_ENCRYPTION_KEY:?error}
+
+      AUTHZ_MODE: ${AUTHZ_MODE:-STRICT}
+      SWAGGER_ENABLED: ${SWAGGER_ENABLED:-true}
+      SWAGGER_FRAME_ANCESTORS: ${SWAGGER_FRAME_ANCESTORS:-}
+
+      MAX_RUNNING_ANALYSES: ${MAX_RUNNING_ANALYSES:-5}
+      MAX_RUNNING_PER_PROJECT: ${MAX_RUNNING_PER_PROJECT:-2}
+
+      METRICS_ENABLED: ${METRICS_ENABLED:-true}
+
+      # SSO OIDC (optional)
+      SSO_OIDC_ENABLED: ${SSO_OIDC_ENABLED:-false}
+      SSO_OIDC_ISSUER: ${SSO_OIDC_ISSUER:-}
+      SSO_OIDC_CLIENT_ID: ${SSO_OIDC_CLIENT_ID:-}
+      SSO_OIDC_CLIENT_SECRET: ${SSO_OIDC_CLIENT_SECRET:-}
+      SSO_OIDC_REDIRECT_URL: ${SSO_OIDC_REDIRECT_URL:-}
+      SSO_OIDC_SCOPES: ${SSO_OIDC_SCOPES:-openid email profile}
+      SSO_OIDC_PKCE: ${SSO_OIDC_PKCE:-true}
+      SSO_OIDC_TOKEN_AUTH: ${SSO_OIDC_TOKEN_AUTH:-client_secret_post}
+      SSO_OIDC_SKIP_TOKEN_VERIFY: ${SSO_OIDC_SKIP_TOKEN_VERIFY:-false}
+      SSO_OIDC_LOGOUT_URL: ${SSO_OIDC_LOGOUT_URL:-}
+
+      # SSO SAML (optional)
+      SSO_SAML_ENABLED: ${SSO_SAML_ENABLED:-false}
+      SSO_SAML_ENTRY_POINT: ${SSO_SAML_ENTRY_POINT:-}
+      SSO_SAML_ISSUER: ${SSO_SAML_ISSUER:-}
+      SSO_SAML_CALLBACK_URL: ${SSO_SAML_CALLBACK_URL:-}
+      SSO_SAML_IDP_CERT: ${SSO_SAML_IDP_CERT:-}
+      SSO_SAML_AUDIENCE: ${SSO_SAML_AUDIENCE:-}
+      SSO_SAML_LOGOUT_URL: ${SSO_SAML_LOGOUT_URL:-}
+
+      WORKSPACE_PATH: ${WORKSPACE_PATH:-/workspace}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${API_PORT:-3001}:3001"
+    volumes:
+      - ./analyzers:/app/analyzers:ro
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:3001/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - qubeless-network
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 2G
+        reservations:
+          cpus: "1"
+          memory: 1G
+
+  # Worker Service (NO PORTS)
+  worker:
+    build:
+      context: .
+      dockerfile: apps/worker/Dockerfile
+      cache_from:
+        - qubeless/worker:latest
+    image: qubeless/worker:${VERSION:-latest}
+    container_name: qubeless-worker
+    restart: always
+    environment:
+      NODE_ENV: production
+
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      WORKER_QUEUE: analysis-queue
+
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:?error}@postgres:5432/${POSTGRES_DB:-qubeless}
+
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+
+      WORKSPACE_PATH: ${WORKSPACE_PATH:-/workspace}
+      OUT_BASE: /tmp/analyzer-out
+
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:?error}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:?error}
+      MINIO_BUCKET_SOURCES: ${MINIO_BUCKET_SOURCES:-sources}
+      MINIO_BUCKET_ARTIFACTS: ${MINIO_BUCKET_ARTIFACTS:-artifacts}
+      VCS_TOKEN_ENCRYPTION_KEY: ${VCS_TOKEN_ENCRYPTION_KEY:?error}
+      LLM_PROVIDER_ENCRYPTION_KEY: ${LLM_PROVIDER_ENCRYPTION_KEY:?error}
+      CHAT_WEBHOOK_ENCRYPTION_KEY: ${CHAT_WEBHOOK_ENCRYPTION_KEY:?error}
+
+      WORKER_CONCURRENCY: ${WORKER_CONCURRENCY:-2}
+      WORKER_JOB_ATTEMPTS: ${WORKER_JOB_ATTEMPTS:-2}
+      WORKER_BACKOFF_MS: ${WORKER_BACKOFF_MS:-5000}
+
+      ANALYZER_TIMEOUT_MS: ${ANALYZER_TIMEOUT_MS:-600000}
+      ANALYZER_MEMORY_MB: ${ANALYZER_MEMORY_MB:-1024}
+      ANALYZER_CPU_LIMIT: ${ANALYZER_CPU_LIMIT:-1}
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /tmp/workspaces:/tmp/workspaces
+      - /tmp/analyzer-out:/tmp/analyzer-out
+      - ./analyzers:/workspace/analyzers:ro
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - qubeless-network
+    deploy:
+      resources:
+        limits:
+          cpus: "4"
+          memory: 4G
+        reservations:
+          cpus: "2"
+          memory: 2G
+
+  # Web Frontend (LOCAL ONLY)
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:?error}
+        WEB_CSP_CONNECT_SRC: "${WEB_CSP_CONNECT_SRC:-https://api.example.com}"
+      cache_from:
+        - qubeless/web:latest
+    image: qubeless/web:${VERSION:-latest}
+    container_name: qubeless-web
+    restart: always
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${WEB_PORT:-8081}:8081"
+    read_only: true
+    tmpfs:
+      - /var/cache/nginx
+      - /var/run
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:8081"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - qubeless-network
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 512M
+        reservations:
+          cpus: "0.5"
+          memory: 256M
+
+  # Documentation Site (LOCAL ONLY by default)
+  site:
+    build:
+      context: .
+      dockerfile: apps/site/Dockerfile
+      args:
+        VITE_DOMAIN_APP: ${SITE_VITE_DOMAIN_APP:-https://app.example.com}
+        VITE_DOCS_URL: ${SITE_VITE_DOCS_URL:-https://docs.example.com}
+        VITE_GITHUB_URL: ${SITE_VITE_GITHUB_URL:-https://github.com/qubeless/qubeless-monorepo}
+        VITE_SWAGGER_UI_URL: ${SITE_VITE_SWAGGER_UI_URL:-/api/docs}
+        VITE_API_URL: ${SITE_VITE_API_URL:-}
+      cache_from:
+        - qubeless/site:latest
+    image: qubeless/site:${VERSION:-latest}
+    container_name: qubeless-site
+    restart: always
+    ports:
+      - "${SITE_BIND_HOST:-127.0.0.1}:${SITE_PORT:-8082}:8082"
+    read_only: true
+    tmpfs:
+      - /var/cache/nginx
+      - /var/run
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:8082"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - qubeless-network
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 512M
+        reservations:
+          cpus: "0.5"
+          memory: 256M
+
+volumes:
+  postgres_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DATA_DIR:-.}/volumes/postgres
+
+  redis_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DATA_DIR:-.}/volumes/redis
+
+  minio_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DATA_DIR:-.}/volumes/minio
+
+networks:
+  qubeless-network:
+    driver: bridge

@@ -1,0 +1,43 @@
+node_modules
+apps/*/node_modules
+packages/*/node_modules
+.pnpm-store
+.turbo
+dist
+build
+/coverage
+.git
+.gitignore
+.DS_Store
+.env
+.env.*
+.env.local
+.env.*.local
+.env*
+pnpm-debug.log*
+npm-debug.log*
+yarn-error.log*
+
+# Local workspace artifacts
+Agents.md
+CODEX_SESSION_TODO_*.md
+*_COVERAGE_PLAN.md
+tests.log
+
+# Local tooling caches
+.claude/
+.codex/
+.cache/
+.eslintcache
+*.tsbuildinfo
+
+# Test files and artifacts
+tests/
+**/__tests__/
+**/*.spec.ts
+**/*.spec.js
+**/*.test.ts
+**/*.test.js
+**/*.cy.ts
+**/*.cy.js
+apps/web/cypress/

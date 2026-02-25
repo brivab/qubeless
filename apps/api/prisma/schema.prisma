@@ -1,0 +1,666 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  USER
+}
+
+enum ProjectRole {
+  PROJECT_ADMIN
+  PROJECT_MAINTAINER
+  PROJECT_VIEWER
+}
+
+enum OrgRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum AnalysisStatus {
+  PENDING
+  RUNNING
+  SUCCESS
+  FAILED
+}
+
+enum IssueSeverity {
+  INFO
+  MINOR
+  MAJOR
+  CRITICAL
+  BLOCKER
+}
+
+enum IssueType {
+  BUG
+  CODE_SMELL
+  VULNERABILITY
+}
+
+enum IssueStatus {
+  OPEN
+  FALSE_POSITIVE
+  ACCEPTED_RISK
+  RESOLVED
+}
+
+enum LlmRunStatus {
+  QUEUED
+  RUNNING
+  SUCCESS
+  FAILED
+}
+
+enum QualityGateOperator {
+  GT
+  LT
+  EQ
+}
+
+enum QualityGateScope {
+  ALL
+  NEW
+}
+
+enum PullRequestProvider {
+  GITHUB
+  GITLAB
+  BITBUCKET
+}
+
+enum LeakPeriodType {
+  LAST_ANALYSIS
+  DATE
+  BASE_BRANCH
+}
+
+enum SsoProvider {
+  OIDC
+  SAML
+  LDAP
+}
+
+enum ArtifactKind {
+  REPORT
+  MEASURES
+  LOG
+  SOURCE_ZIP
+}
+
+enum CoverageFormat {
+  LCOV
+  COBERTURA
+  JACOCO
+}
+
+enum AuditAction {
+  AUTH_LOGIN
+  AUTH_LOGOUT
+  USER_CREATE
+  PROJECT_CREATE
+  PROJECT_UPDATE
+  PROJECT_DELETE
+  QUALITY_GATE_CREATE
+  QUALITY_GATE_UPDATE
+  QUALITY_GATE_DELETE
+  ANALYZER_ENABLE
+  ANALYZER_DISABLE
+  ANALYZER_CONFIG_UPDATE
+  TOKEN_CREATE
+  TOKEN_DELETE
+  PROJECT_MEMBER_ADD
+  PROJECT_MEMBER_UPDATE
+  PROJECT_MEMBER_REMOVE
+  ANALYSIS_CREATE
+  ISSUE_RESOLVE
+  ORGANIZATION_CREATE
+  ORGANIZATION_UPDATE
+  ORGANIZATION_DELETE
+  ORGANIZATION_MEMBER_ADD
+  ORGANIZATION_MEMBER_UPDATE
+  ORGANIZATION_MEMBER_REMOVE
+}
+
+model Organization {
+  id              String                  @id @default(uuid())
+  name            String
+  slug            String                  @unique
+  description     String?
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+  projects        Project[]
+  members         OrganizationMembership[]
+  qualityGates    QualityGate[]
+  analyzers       Analyzer[]
+
+  @@index([slug])
+}
+
+model OrganizationMembership {
+  id              String       @id @default(uuid())
+  organizationId  String
+  userId          String       @db.Uuid
+  role            OrgRole      @default(MEMBER)
+  createdAt       DateTime     @default(now())
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+  @@index([userId])
+  @@index([organizationId])
+}
+
+model Analyzer {
+  id              String             @id @default(uuid())
+  key             String             @unique
+  name            String
+  dockerImage     String
+  enabled         Boolean            @default(true)
+  organizationId  String?
+  createdAt       DateTime           @default(now())
+  organization    Organization?      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  projectLinks    ProjectAnalyzer[]
+
+  @@index([enabled])
+  @@index([organizationId])
+}
+
+model ProjectAnalyzer {
+  projectId   String
+  analyzerId  String
+  enabled     Boolean  @default(true)
+  configJson  Json?
+  createdAt   DateTime @default(now())
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  analyzer    Analyzer @relation(fields: [analyzerId], references: [id], onDelete: Cascade)
+
+  @@id([projectId, analyzerId])
+  @@index([analyzerId])
+}
+
+model User {
+  id                      String                  @id @default(uuid()) @db.Uuid
+  email                   String                  @unique
+  passwordHash            String
+  mfaEnabled              Boolean                 @default(false)
+  mfaSecret               String?
+  globalRole              UserRole                @default(USER)
+  createdAt               DateTime                @default(now())
+  updatedAt               DateTime                @updatedAt
+  ssoIdentities           SsoIdentity[]
+  projectMemberships      ProjectMembership[]
+  organizationMemberships OrganizationMembership[]
+  auditLogs               AuditLog[]
+  vcsTokens               VcsToken[]
+  llmRunsRequested        LlmRun[]                @relation("LlmRunRequestedByUser")
+}
+
+model SsoIdentity {
+  id        String      @id @default(uuid()) @db.Uuid
+  provider  SsoProvider
+  subject   String
+  email     String
+  userId    String      @db.Uuid
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, subject])
+  @@index([email])
+  @@index([userId])
+}
+
+model Project {
+  id                  String              @id @default(uuid())
+  key                 String              @unique
+  name                String
+  description         String?
+  languages           String[]            @default([])
+  leakPeriodType      LeakPeriodType      @default(LAST_ANALYSIS)
+  leakPeriodValue     String?
+  organizationId      String
+  activeRuleProfileId String?
+  smtpHost            String?
+  smtpPort            Int?
+  smtpSecure          Boolean?
+  smtpUser            String?
+  smtpPassword        String?
+  smtpFrom            String?
+  createdAt           DateTime            @default(now())
+  organization        Organization        @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  branches            Branch[]
+  analyses            Analysis[]
+  qualityGates        QualityGate[]
+  analyzers           ProjectAnalyzer[]
+  apiTokens           ApiToken[]
+  pullRequests        PullRequest[]
+  metrics             AnalysisMetric[]
+  ruleProfiles        RuleProfile[]       @relation("ProjectRuleProfiles")
+  activeRuleProfile   RuleProfile?        @relation("ActiveRuleProfile", fields: [activeRuleProfileId], references: [id], onDelete: SetNull)
+  memberships         ProjectMembership[]
+  chatIntegrations    ChatIntegration[]
+  llmSettings         ProjectLlmSettings?
+  llmRuns             LlmRun[]
+
+  @@index([activeRuleProfileId])
+  @@index([organizationId])
+}
+
+model ProjectMembership {
+  id                    String      @id @default(uuid())
+  userId                String      @db.Uuid
+  projectId             String
+  role                  ProjectRole
+  emailNotifyAnalysisFailed    Boolean  @default(true)
+  emailNotifyQualityGateFailed Boolean  @default(true)
+  emailAddress          String?     // Override user.email for this project
+  createdAt             DateTime    @default(now())
+  user                  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project               Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, projectId])
+  @@index([userId])
+  @@index([projectId])
+}
+
+model Branch {
+  id         String     @id @default(uuid())
+  name       String
+  isDefault  Boolean    @default(false)
+  projectId  String
+  project    Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  analyses   Analysis[]
+  metrics    AnalysisMetric[]
+  createdAt  DateTime   @default(now())
+
+  @@unique([projectId, name])
+  @@index([projectId, isDefault])
+}
+
+model Analysis {
+  id                    String          @id @default(uuid())
+  projectId             String
+  branchId              String?
+  pullRequestId         String?
+  baselineAnalysisId    String?
+  commitSha             String
+  status                AnalysisStatus  @default(PENDING)
+  startedAt             DateTime?
+  finishedAt            DateTime?
+  createdAt             DateTime        @default(now())
+  debtRatio             Decimal?        @db.Decimal(10, 2)
+  remediationCost       Int?
+  maintainabilityRating String?
+  duplicationPercent    Decimal?        @db.Decimal(10, 2)
+  duplicationBlocks     Int?
+  project               Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  branch                Branch?         @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  pullRequest           PullRequest?    @relation(fields: [pullRequestId], references: [id], onDelete: Cascade)
+  baselineAnalysis      Analysis?       @relation("Baseline", fields: [baselineAnalysisId], references: [id], onDelete: SetNull)
+  baselineChildren      Analysis[]      @relation("Baseline")
+  issues                Issue[]
+  baselineIssues        Issue[]         @relation("IssueBaseline")
+  artifacts             AnalysisArtifact[]
+  metrics               AnalysisMetric[]
+  coverageReport        CoverageReport?
+  duplicationBlocksData DuplicationBlock[]
+
+  @@index([projectId])
+  @@index([branchId])
+  @@index([pullRequestId])
+  @@index([baselineAnalysisId])
+  @@index([projectId, branchId])
+  @@index([status])
+}
+
+model Issue {
+  id          String        @id @default(uuid())
+  analysisId  String
+  baselineAnalysisId String?
+  analyzerKey String        @default("legacy")
+  ruleKey     String
+  severity    IssueSeverity
+  type        IssueType
+  status      IssueStatus   @default(OPEN)
+  filePath    String
+  line        Int?
+  message     String
+  fingerprint String
+  language    String?
+  isNew       Boolean       @default(false)
+  createdAt   DateTime      @default(now())
+  analysis    Analysis      @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+  baselineAnalysis Analysis? @relation("IssueBaseline", fields: [baselineAnalysisId], references: [id], onDelete: SetNull)
+  resolutions IssueResolution[]
+  llmRuns     LlmRun[]
+
+  @@unique([analysisId, analyzerKey, fingerprint])
+  @@index([fingerprint])
+  @@index([analysisId])
+  @@index([baselineAnalysisId])
+  @@index([status])
+  @@index([language])
+}
+
+model IssueResolution {
+  id        String      @id @default(uuid())
+  issueId   String
+  status    IssueStatus
+  comment   String?
+  author    String
+  createdAt DateTime    @default(now())
+  issue     Issue       @relation(fields: [issueId], references: [id], onDelete: Cascade)
+
+  @@index([issueId])
+  @@index([createdAt])
+}
+
+model QualityGate {
+  id              String                 @id @default(uuid())
+  name            String
+  projectId       String
+  organizationId  String?
+  createdAt       DateTime               @default(now())
+  project         Project                @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  organization    Organization?          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  conditions      QualityGateCondition[]
+
+  @@unique([projectId, name])
+  @@index([projectId])
+  @@index([organizationId])
+}
+
+model QualityGateCondition {
+  id            String              @id @default(uuid())
+  qualityGateId String
+  metric        String
+  operator      QualityGateOperator
+  scope         QualityGateScope    @default(ALL)
+  threshold     Decimal             @db.Decimal(18, 4)
+  qualityGate   QualityGate         @relation(fields: [qualityGateId], references: [id], onDelete: Cascade)
+
+  @@index([qualityGateId])
+  @@index([metric])
+}
+
+model ApiToken {
+  id          String   @id @default(uuid())
+  name        String
+  tokenHash   String   @unique
+  projectId   String?
+  createdAt   DateTime @default(now())
+  lastUsedAt  DateTime @default(now())
+  project     Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+model VcsToken {
+  id             String              @id @default(uuid())
+  provider       PullRequestProvider
+  tokenEncrypted String
+  baseUrl        String?
+  userId         String?             @db.Uuid
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  lastUsedAt     DateTime?
+  user           User?               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, userId])
+  @@index([userId])
+}
+
+model PullRequest {
+  id           String               @id @default(uuid())
+  projectId    String
+  provider     PullRequestProvider
+  repo         String
+  prNumber     Int
+  sourceBranch String
+  targetBranch String
+  commitSha    String
+  url          String?
+  createdAt    DateTime             @default(now())
+  project      Project              @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  analyses     Analysis[]
+  llmRuns      LlmRun[]
+
+  @@unique([projectId, provider, repo, prNumber])
+  @@index([projectId])
+}
+
+model AnalysisArtifact {
+  id          String       @id @default(uuid())
+  analysisId  String
+  analyzerKey String       @default("legacy")
+  kind        ArtifactKind
+  bucket      String
+  objectKey   String
+  contentType String
+  size        BigInt
+  createdAt   DateTime     @default(now())
+  analysis    Analysis     @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+
+  @@unique([analysisId, analyzerKey, kind])
+  @@index([analysisId, analyzerKey, kind])
+}
+
+model AnalysisMetric {
+  id         String   @id @default(uuid())
+  analysisId String
+  projectId  String
+  branchId   String?
+  metricKey  String
+  value      Decimal  @db.Decimal(18, 4)
+  createdAt  DateTime @default(now())
+  analysis   Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  branch     Branch?  @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  @@index([analysisId])
+  @@index([projectId, metricKey])
+  @@index([branchId, metricKey])
+}
+
+model Rule {
+  key             String        @id
+  analyzerKey     String
+  name            String
+  description     String
+  defaultSeverity IssueSeverity
+  profileRules    RuleProfileRule[]
+
+  @@index([analyzerKey])
+}
+
+model RuleProfile {
+  id              String           @id @default(uuid())
+  name            String
+  projectId       String
+  createdAt       DateTime         @default(now())
+  project         Project          @relation("ProjectRuleProfiles", fields: [projectId], references: [id], onDelete: Cascade)
+  rules           RuleProfileRule[]
+  activeForProjects Project[]      @relation("ActiveRuleProfile")
+
+  @@unique([projectId, name])
+  @@index([projectId])
+}
+
+model RuleProfileRule {
+  ruleProfileId String
+  ruleKey       String
+  enabled       Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  ruleProfile   RuleProfile @relation(fields: [ruleProfileId], references: [id], onDelete: Cascade)
+  rule          Rule        @relation(fields: [ruleKey], references: [key], onDelete: Cascade)
+
+  @@id([ruleProfileId, ruleKey])
+  @@index([ruleKey])
+}
+
+model AuditLog {
+  id           String      @id @default(uuid())
+  actorUserId  String?     @db.Uuid
+  action       AuditAction
+  targetType   String?
+  targetId     String?
+  metadata     Json?
+  createdAt    DateTime    @default(now())
+  actor        User?       @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([actorUserId])
+  @@index([action])
+  @@index([targetType, targetId])
+  @@index([createdAt])
+}
+
+model CoverageReport {
+  id              Int             @id @default(autoincrement())
+  analysisId      String          @unique
+  analysis        Analysis        @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+  format          CoverageFormat
+  totalLines      Int
+  coveredLines    Int
+  totalBranches   Int
+  coveredBranches Int
+  coveragePercent Decimal         @db.Decimal(10, 2)
+  createdAt       DateTime        @default(now())
+  files           FileCoverage[]
+
+  @@index([analysisId])
+}
+
+model FileCoverage {
+  id                Int            @id @default(autoincrement())
+  coverageReportId  Int
+  coverageReport    CoverageReport @relation(fields: [coverageReportId], references: [id], onDelete: Cascade)
+  filePath          String
+  lines             Int
+  coveredLines      Int
+  branches          Int
+  coveredBranches   Int
+  lineHits          Json
+  createdAt         DateTime       @default(now())
+
+  @@index([coverageReportId])
+  @@index([filePath])
+}
+
+model DuplicationBlock {
+  id             Int      @id @default(autoincrement())
+  analysisId     String
+  analysis       Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+  file1Path      String
+  file1StartLine Int
+  file1EndLine   Int
+  file2Path      String
+  file2StartLine Int
+  file2EndLine   Int
+  lines          Int
+  tokens         Int
+  fingerprint    String
+  createdAt      DateTime @default(now())
+
+  @@index([analysisId])
+  @@index([file1Path])
+  @@index([file2Path])
+}
+
+model ChatIntegration {
+  id         Int      @id @default(autoincrement())
+  projectId  String
+  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  provider   String   // "slack", "teams", "discord", "generic"
+  webhookUrl String   // Encrypted webhook URL
+  channel    String?  // Optional channel name/identifier
+  events     String[] // ["analysis.completed", "quality_gate.failed"]
+  enabled    Boolean  @default(true)
+  createdAt  DateTime @default(now())
+
+  @@index([projectId])
+  @@index([enabled])
+}
+
+model LlmProvider {
+  id             String   @id @default(uuid())
+  name           String   @unique
+  providerType   String
+  baseUrl        String
+  model          String?
+  headersJson    Json?
+  tokenEncrypted String?
+  isDefault      Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  projectSettings ProjectLlmSettings[]
+  llmRuns        LlmRun[]
+
+  @@index([providerType])
+  @@index([isDefault])
+}
+
+model LlmPromptTemplate {
+  id           String   @id @default(uuid())
+  name         String
+  version      String
+  systemPrompt String
+  taskPrompt   String
+  createdAt    DateTime @default(now())
+  isActive     Boolean  @default(false)
+
+  @@unique([name, version])
+  @@index([name])
+  @@index([isActive])
+  @@index([createdAt])
+}
+
+model ProjectLlmSettings {
+  projectId     String   @id
+  llmProviderId String?
+  overridesJson Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  project       Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  llmProvider   LlmProvider? @relation(fields: [llmProviderId], references: [id], onDelete: SetNull)
+
+  @@index([llmProviderId])
+}
+
+model LlmRun {
+  id            String       @id @default(uuid())
+  issueId       String
+  projectId     String
+  providerId    String?
+  pullRequestId String?
+  requestedByUserId String?  @db.Uuid
+  status        LlmRunStatus @default(QUEUED)
+  promptVersion String?
+  inputTokens   Int?
+  outputTokens  Int?
+  cost          Decimal?     @db.Decimal(10, 4)
+  outputPatch   String?
+  outputSummary String?
+  errorMessage  String?
+  createdAt     DateTime     @default(now())
+  issue         Issue        @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  project       Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  provider      LlmProvider? @relation(fields: [providerId], references: [id], onDelete: SetNull)
+  pullRequest   PullRequest? @relation(fields: [pullRequestId], references: [id], onDelete: SetNull)
+  requestedByUser User?      @relation("LlmRunRequestedByUser", fields: [requestedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([issueId])
+  @@index([projectId])
+  @@index([providerId])
+  @@index([pullRequestId])
+  @@index([requestedByUserId])
+  @@index([status])
+  @@index([createdAt])
+}

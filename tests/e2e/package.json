@@ -1,0 +1,25 @@
+{
+  "name": "@qubeless/e2e-tests",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node index.js",
+    "test:auth": "node index.js --only=auth",
+    "test:projects": "node index.js --only=projects",
+    "test:analyses": "node index.js --only=analyses",
+    "test:sso": "node index.js --only=sso",
+    "test:health": "node index.js --only=health",
+    "test:audit": "node index.js --only=audit",
+    "test:rbac": "node index.js --only=rbac",
+    "test:quick": "node index.js --quick"
+  },
+  "dependencies": {
+    "axios": "^1.6.5",
+    "chalk": "^5.3.0",
+    "form-data": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.8"
+  }
+}

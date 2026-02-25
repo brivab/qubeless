@@ -1,0 +1,58 @@
+<?xml version="1.0" ?>
+<!DOCTYPE coverage SYSTEM "http://cobertura.sourceforge.net/xml/coverage-04.dtd">
+<coverage line-rate="0.8125" branch-rate="0.6667" lines-covered="13" lines-valid="16" branches-covered="4" branches-valid="6" complexity="0" version="1.0" timestamp="1640000000000">
+  <sources>
+    <source>src</source>
+  </sources>
+  <packages>
+    <package name="utils" line-rate="1.0" branch-rate="1.0" complexity="0">
+      <classes>
+        <class name="math.ts" filename="utils/math.ts" line-rate="1.0" branch-rate="1.0" complexity="0">
+          <methods>
+            <method name="add" signature="(a: number, b: number)" line-rate="1.0" branch-rate="1.0">
+              <lines>
+                <line number="1" hits="1" branch="false"/>
+                <line number="2" hits="10" branch="false"/>
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="1" hits="1" branch="false"/>
+            <line number="2" hits="10" branch="false"/>
+            <line number="3" hits="10" branch="false"/>
+            <line number="5" hits="1" branch="false"/>
+            <line number="6" hits="8" branch="false"/>
+            <line number="7" hits="8" branch="false"/>
+            <line number="9" hits="1" branch="false"/>
+            <line number="10" hits="5" branch="true" condition-coverage="100% (2/2)"/>
+            <line number="11" hits="3" branch="false"/>
+            <line number="12" hits="2" branch="false"/>
+          </lines>
+        </class>
+      </classes>
+    </package>
+    <package name="services" line-rate="0.5" branch-rate="0.5" complexity="0">
+      <classes>
+        <class name="calculator.ts" filename="services/calculator.ts" line-rate="0.5" branch-rate="0.5" complexity="0">
+          <methods>
+            <method name="calculate" signature="(x: number)" line-rate="1.0" branch-rate="1.0">
+              <lines>
+                <line number="1" hits="1" branch="false"/>
+                <line number="2" hits="12" branch="true" condition-coverage="100% (2/2)"/>
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="1" hits="1" branch="false"/>
+            <line number="2" hits="12" branch="true" condition-coverage="100% (2/2)"/>
+            <line number="3" hits="12" branch="false"/>
+            <line number="4" hits="12" branch="false"/>
+            <line number="5" hits="1" branch="false"/>
+            <line number="6" hits="0" branch="true" condition-coverage="0% (0/2)"/>
+            <line number="7" hits="0" branch="false"/>
+          </lines>
+        </class>
+      </classes>
+    </package>
+  </packages>
+</coverage>

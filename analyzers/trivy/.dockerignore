@@ -1,0 +1,9 @@
+*.md
+README.md
+DEPLOYMENT.md
+.git
+.gitignore
+test-output/
+*.log
+test.sh
+.env*

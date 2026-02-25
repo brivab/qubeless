@@ -1,0 +1,43 @@
+{
+  "name": "qubeless-monorepo",
+  "private": true,
+  "version": "0.1.0",
+  "license": "MIT",
+  "packageManager": "pnpm@8.12.0",
+  "scripts": {
+    "dev": "turbo run dev --parallel",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "format": "turbo run format",
+    "clean": "turbo run clean",
+    "db:migrate": "cd apps/api && pnpm prisma migrate dev",
+    "db:generate": "cd apps/api && pnpm prisma generate",
+    "submit": "pnpm --filter @qubeless/tools run submit --",
+    "scanner": "pnpm --filter @qubeless/scanner run scanner",
+    "test": "node scripts/run-all-tests.js",
+    "test:unit": "pnpm --filter @qubeless/api run test:unit",
+    "test:e2e": "cd tests/e2e && pnpm install && pnpm test",
+    "test:e2e:quick": "cd tests/e2e && pnpm install && pnpm test:quick",
+    "test:e2e:auth": "cd tests/e2e && pnpm install && pnpm test:auth",
+    "test:e2e:projects": "cd tests/e2e && pnpm install && pnpm test:projects",
+    "test:e2e:analyses": "cd tests/e2e && pnpm install && pnpm test:analyses",
+    "test:api:auth": "pnpm --filter @qubeless/api run test:auth-local",
+    "test:api:sso": "pnpm --filter @qubeless/api run test:oidc-mapping && pnpm --filter @qubeless/api run test:saml-mapping",
+    "test:api:all": "pnpm --filter @qubeless/api run test:all",
+    "test:api:all:coverage": "pnpm --filter @qubeless/api run test:all:coverage",
+    "test:scripts": "node scripts/test-scripts.js",
+    "test:coverage": "pnpm turbo run test:unit:coverage",
+    "test:coverage:api": "pnpm --filter @qubeless/api test:unit:coverage",
+    "test:coverage:worker": "cd apps/worker && pnpm vitest run --coverage",
+    "coverage:report": "c8 report",
+    "audit": "./scripts/audit-dependencies.sh",
+    "audit:fix": "pnpm audit --fix",
+    "audit:report": "pnpm audit --json > audit-report.json"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^4.0.16",
+    "c8": "^10.1.3",
+    "turbo": "^1.11.3",
+    "typescript": "^5.3.3"
+  }
+}

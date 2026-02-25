@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "sourceMap": true,
+    "paths": {
+      "@qubeless/shared": ["../../packages/shared/dist"]
+    }
+  },
+  "exclude": ["**/*.spec.ts", "**/*.test.ts", "test"],
+  "references": [
+    {
+      "path": "../../packages/shared/tsconfig.json"
+    }
+  ]
+}

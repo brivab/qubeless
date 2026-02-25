@@ -1,0 +1,227 @@
+# Qubeless Production Makefile
+#
+# Quick commands for production deployment and management
+#
+# Usage:
+#   make -f Makefile.prod <target>
+#   or create an alias: alias qube='make -f Makefile.prod'
+
+.PHONY: help validate setup up down restart logs ps backup restore clean health metrics
+
+# Default target
+.DEFAULT_GOAL := help
+
+# Docker Compose command
+DOCKER_COMPOSE := docker-compose -f docker-compose.prod.yml --env-file .env.production
+
+##@ General
+
+help: ## Display this help
+	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make -f Makefile.prod \033[36m<target>\033[0m\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
+
+##@ Setup & Configuration
+
+validate: ## Validate production configuration
+	@echo "🔍 Validating production configuration..."
+	@./scripts/validate-prod-config.sh
+
+setup: ## Initial setup (create directories, prepare env file)
+	@echo "🔧 Setting up production environment..."
+	@if [ ! -f .env.production ]; then \
+		touch .env.production; \
+		echo "✅ Created empty .env.production"; \
+		echo "⚠️  Fill it with the variables listed in docs/en/deploy.md (.env.production Example section)"; \
+	else \
+		echo "✅ .env.production already exists"; \
+	fi
+	@mkdir -p volumes/{postgres,redis,minio}
+	@mkdir -p backups/{postgres,minio}
+	@mkdir -p /tmp/{workspaces,analyzer-out}
+	@echo "✅ Created all required directories"
+	@echo ""
+	@echo "Next steps:"
+	@echo "  1. Edit .env.production with your values"
+	@echo "  2. Run: make -f Makefile.prod validate"
+	@echo "  3. Run: make -f Makefile.prod up"
+
+config: ## Show the generated Docker Compose configuration
+	@$(DOCKER_COMPOSE) config
+
+##@ Service Management
+
+up: ## Start all services
+	@echo "🚀 Starting all services..."
+	@$(DOCKER_COMPOSE) up -d
+	@echo "✅ All services started"
+	@echo ""
+	@echo "Check status: make -f Makefile.prod ps"
+	@echo "View logs:    make -f Makefile.prod logs"
+
+down: ## Stop all services
+	@echo "🛑 Stopping all services..."
+	@$(DOCKER_COMPOSE) down
+	@echo "✅ All services stopped"
+
+restart: ## Restart all services
+	@echo "🔄 Restarting all services..."
+	@$(DOCKER_COMPOSE) restart
+	@echo "✅ All services restarted"
+
+rebuild: ## Rebuild and restart all services
+	@echo "🔨 Rebuilding all services..."
+	@$(DOCKER_COMPOSE) up -d --build
+	@echo "✅ All services rebuilt and restarted"
+
+pull: ## Pull latest images
+	@echo "📥 Pulling latest images..."
+	@$(DOCKER_COMPOSE) pull
+	@echo "✅ Images updated"
+
+##@ Monitoring
+
+ps: ## Show service status
+	@$(DOCKER_COMPOSE) ps
+
+logs: ## Show logs (all services)
+	@$(DOCKER_COMPOSE) logs -f
+
+logs-api: ## Show API logs
+	@$(DOCKER_COMPOSE) logs -f api
+
+logs-worker: ## Show worker logs
+	@$(DOCKER_COMPOSE) logs -f worker
+
+logs-web: ## Show web logs
+	@$(DOCKER_COMPOSE) logs -f web
+
+logs-postgres: ## Show PostgreSQL logs
+	@$(DOCKER_COMPOSE) logs -f postgres
+
+stats: ## Show resource usage statistics
+	@docker stats
+
+health: ## Check health of all services
+	@echo "🏥 Checking service health..."
+	@echo ""
+	@echo "PostgreSQL:"
+	@$(DOCKER_COMPOSE) exec -T postgres pg_isready -U postgres || echo "❌ PostgreSQL not ready"
+	@echo ""
+	@echo "Redis:"
+	@$(DOCKER_COMPOSE) exec -T redis redis-cli ping || echo "❌ Redis not ready"
+	@echo ""
+	@echo "MinIO:"
+	@curl -sf http://localhost:9000/minio/health/live > /dev/null && echo "✅ MinIO healthy" || echo "❌ MinIO not healthy"
+	@echo ""
+	@echo "API:"
+	@curl -sf http://localhost:3001/api/health > /dev/null && echo "✅ API healthy" || echo "❌ API not healthy"
+	@echo ""
+	@echo "Web:"
+	@curl -sf http://localhost:8081 > /dev/null && echo "✅ Web healthy" || echo "❌ Web not healthy"
+
+metrics: ## Show Prometheus metrics (if enabled)
+	@curl -s http://localhost:3001/api/metrics
+
+##@ Database
+
+db-shell: ## Open PostgreSQL shell
+	@$(DOCKER_COMPOSE) exec postgres psql -U postgres -d qubeless
+
+db-migrate: ## Run database migrations
+	@echo "🔄 Running database migrations..."
+	@./scripts/migrate.sh
+
+db-status: ## Show migration status
+	@$(DOCKER_COMPOSE) exec api sh -c "pnpm --filter @qubeless/api run prisma:migrate status"
+
+##@ Backup & Restore
+
+backup: ## Create a backup
+	@echo "💾 Creating backup..."
+	@./scripts/backup.sh
+	@echo "✅ Backup complete"
+
+restore: ## Restore from backup (usage: make restore BACKUP_DIR=./backups/20250126_120000)
+	@if [ -z "$(BACKUP_DIR)" ]; then \
+		echo "❌ Error: BACKUP_DIR not specified"; \
+		echo "Usage: make -f Makefile.prod restore BACKUP_DIR=./backups/20250126_120000"; \
+		exit 1; \
+	fi
+	@echo "⚠️  WARNING: This will restore from $(BACKUP_DIR)"
+	@./scripts/restore.sh $(BACKUP_DIR)
+
+##@ Maintenance
+
+clean-workspaces: ## Clean temporary workspaces
+	@echo "🧹 Cleaning temporary workspaces..."
+	@$(DOCKER_COMPOSE) exec worker rm -rf /tmp/workspaces/*
+	@$(DOCKER_COMPOSE) exec worker rm -rf /tmp/analyzer-out/*
+	@echo "✅ Workspaces cleaned"
+
+clean-docker: ## Clean unused Docker resources
+	@echo "🧹 Cleaning Docker resources..."
+	@docker system prune -a -f
+	@echo "✅ Docker cleaned"
+
+clean-logs: ## Clean old Docker logs
+	@echo "🧹 Cleaning Docker logs..."
+	@truncate -s 0 /var/lib/docker/containers/*/*-json.log 2>/dev/null || true
+	@echo "✅ Logs cleaned"
+
+clean-backups: ## Remove backups older than 30 days
+	@echo "🧹 Cleaning old backups (>30 days)..."
+	@find backups -type f -mtime +30 -delete
+	@echo "✅ Old backups cleaned"
+
+##@ Update
+
+update: ## Update to latest version (with backup)
+	@echo "🔄 Updating Qubeless..."
+	@echo "1️⃣ Creating backup..."
+	@./scripts/backup.sh
+	@echo "2️⃣ Pulling latest code..."
+	@git pull origin main
+	@echo "3️⃣ Pulling latest images..."
+	@$(DOCKER_COMPOSE) pull
+	@echo "4️⃣ Rebuilding services..."
+	@$(DOCKER_COMPOSE) up -d --build
+	@echo "5️⃣ Running migrations..."
+	@sleep 10  # Wait for DB to be ready
+	@./scripts/migrate.sh
+	@echo "✅ Update complete"
+	@echo ""
+	@make -f Makefile.prod health
+
+##@ Development
+
+shell-api: ## Open shell in API container
+	@$(DOCKER_COMPOSE) exec api sh
+
+shell-worker: ## Open shell in worker container
+	@$(DOCKER_COMPOSE) exec worker sh
+
+shell-web: ## Open shell in web container
+	@$(DOCKER_COMPOSE) exec web sh
+
+shell-postgres: ## Open shell in PostgreSQL container
+	@$(DOCKER_COMPOSE) exec postgres sh
+
+shell-redis: ## Open shell in Redis container
+	@$(DOCKER_COMPOSE) exec redis sh
+
+##@ Quick Actions
+
+status: ps ## Alias for ps
+
+start: up ## Alias for up
+
+stop: down ## Alias for down
+
+deploy: validate up health ## Full deployment (validate, start, check health)
+	@echo ""
+	@echo "🎉 Deployment complete!"
+	@echo ""
+	@echo "Services:"
+	@echo "  Web:  http://localhost:8081"
+	@echo "  API:  http://localhost:3001"
+	@echo ""
+	@echo "Check logs: make -f Makefile.prod logs"

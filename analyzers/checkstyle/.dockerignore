@@ -1,0 +1,4 @@
+*.md
+DEPLOYMENT.md
+README.md
+.env*

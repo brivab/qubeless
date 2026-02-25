@@ -1,0 +1,138 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: qubeless
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+
+  pgadmin:
+    image: dpage/pgadmin4:8.10
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - '5050:80'
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio123
+    command: server /data --console-address ":9001"
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    volumes:
+      - minio_data:/data
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      HOST: 0.0.0.0
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/qubeless
+      JWT_SECRET: super-secret-change-me
+      JWT_EXPIRES_IN: 1d
+      MFA_ISSUER: Qubeless
+      MFA_BYPASS: "true"
+      VCS_TOKEN_ENCRYPTION_KEY: local-dev-vcs-token-encryption-key-32
+      LLM_PROVIDER_ENCRYPTION_KEY: local-dev-llm-provider-encryption-key
+      CHAT_WEBHOOK_ENCRYPTION_KEY: local-dev-chat-webhook-encryption-key
+      ADMIN_EMAIL: admin@example.com
+      ADMIN_PASSWORD: admin123
+      FRONTEND_ORIGIN: http://localhost:8081
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_PUBLIC_ENDPOINT: http://localhost:9000
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: minio123
+      MINIO_BUCKET_SOURCES: sources
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - '3001:3001'
+
+  worker:
+    build:
+      context: .
+      dockerfile: apps/worker/Dockerfile
+    restart: unless-stopped
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      WORKER_QUEUE: analysis-queue
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/qubeless
+      LOG_LEVEL: info
+      WORKSPACE_PATH: /workspace
+      OUT_BASE: /tmp/analyzer-out
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: minio123
+      MINIO_BUCKET_SOURCES: sources
+      VCS_TOKEN_ENCRYPTION_KEY: local-dev-vcs-token-encryption-key-32
+      LLM_PROVIDER_ENCRYPTION_KEY: local-dev-llm-provider-encryption-key
+      CHAT_WEBHOOK_ENCRYPTION_KEY: local-dev-chat-webhook-encryption-key
+      GITLAB_BASE_URL: http://host.docker.internal
+    depends_on:
+      - redis
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./:/workspace:ro
+      - /tmp/workspaces:/tmp/workspaces
+      - /tmp/analyzer-out:/tmp/analyzer-out
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        VITE_API_URL: http://localhost:3001/api
+        WEB_CSP_CONNECT_SRC: "${WEB_CSP_CONNECT_SRC:-http://localhost:3001 http://127.0.0.1:3001}"
+    restart: unless-stopped
+    ports:
+      - '8081:8081'
+    depends_on:
+      - api
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
+  pgadmin_data:
