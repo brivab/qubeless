@@ -199,6 +199,31 @@ services:
           cpus: "1"
           memory: 1G
 
+  # Docker Socket Proxy (INTERNAL ONLY)
+  docker-proxy:
+    image: tecnativa/docker-socket-proxy:latest
+    container_name: qubeless-docker-proxy
+    restart: always
+    environment:
+      CONTAINERS: 1
+      IMAGES: 1
+      POST: 1
+      INFO: 1
+      VERSION: 1
+      PING: 1
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    read_only: true
+    tmpfs:
+      - /run
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - docker-socket-network
+
   # Worker Service (NO PORTS)
   worker:
     build:
@@ -222,6 +247,7 @@ services:
 
       WORKSPACE_PATH: ${WORKSPACE_PATH:-/workspace}
       OUT_BASE: /tmp/analyzer-out
+      DOCKER_HOST: tcp://docker-proxy:2375
 
       MINIO_ENDPOINT: http://minio:9000
       MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:?error}
@@ -246,8 +272,9 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
+      docker-proxy:
+        condition: service_started
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
       - /tmp/workspaces:/tmp/workspaces
       - /tmp/analyzer-out:/tmp/analyzer-out
       - ./analyzers:/workspace/analyzers:ro
@@ -260,6 +287,7 @@ services:
       - no-new-privileges:true
     networks:
       - qubeless-network
+      - docker-socket-network
     deploy:
       resources:
         limits:
@@ -378,3 +406,6 @@ volumes:
 networks:
   qubeless-network:
     driver: bridge
+  docker-socket-network:
+    driver: bridge
+    internal: true

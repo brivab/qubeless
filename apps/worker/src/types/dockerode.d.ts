@@ -39,6 +39,9 @@ declare module 'dockerode' {
 
   export interface DockerOptions {
     socketPath?: string;
+    host?: string;
+    port?: number;
+    protocol?: 'http' | 'https';
   }
 
   export default class Docker {

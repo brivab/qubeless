@@ -86,6 +86,29 @@ services:
     ports:
       - '3001:3001'
 
+  docker-proxy:
+    image: tecnativa/docker-socket-proxy:latest
+    restart: unless-stopped
+    environment:
+      CONTAINERS: 1
+      IMAGES: 1
+      POST: 1
+      INFO: 1
+      VERSION: 1
+      PING: 1
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    read_only: true
+    tmpfs:
+      - /run
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - docker-socket
+
   worker:
     build:
       context: .
@@ -99,6 +122,7 @@ services:
       LOG_LEVEL: info
       WORKSPACE_PATH: /workspace
       OUT_BASE: /tmp/analyzer-out
+      DOCKER_HOST: tcp://docker-proxy:2375
       MINIO_ENDPOINT: http://minio:9000
       MINIO_ACCESS_KEY: minio
       MINIO_SECRET_KEY: minio123
@@ -109,13 +133,16 @@ services:
       GITLAB_BASE_URL: http://host.docker.internal
     depends_on:
       - redis
+      - docker-proxy
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
       - ./:/workspace:ro
       - /tmp/workspaces:/tmp/workspaces
       - /tmp/analyzer-out:/tmp/analyzer-out
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    networks:
+      - default
+      - docker-socket
 
 
   web:
@@ -136,3 +163,7 @@ volumes:
   redis_data:
   minio_data:
   pgadmin_data:
+
+networks:
+  docker-socket:
+    internal: true

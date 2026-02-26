@@ -453,7 +453,8 @@ If response times exceed 100ms, investigate network latency or resource constrai
 
 **Common issues:**
 
-- Docker socket not mounted (`/var/run/docker.sock`)
+- Docker socket proxy not running/reachable (`docker-proxy:2375`)
+- `DOCKER_HOST` missing or misconfigured in worker environment
 - Insufficient permissions to access Docker daemon
 - Postgres/Redis/MinIO not reachable
 

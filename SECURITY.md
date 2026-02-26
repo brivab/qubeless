@@ -22,14 +22,17 @@ When reporting, include:
 
 ## Operational Security Notes
 
-### Docker Socket Exposure (`/var/run/docker.sock`)
+### Docker Daemon Access (Worker via Socket Proxy)
 
-Qubeless worker uses the Docker socket to run analyzer containers. Any container with access to the socket can potentially control the Docker host.
+Qubeless worker launches analyzer containers through an internal Docker socket proxy.
+The proxy mounts `/var/run/docker.sock` on the host and exposes a restricted Docker API surface to the worker.
+This reduces direct exposure from the worker container, but Docker daemon access remains a high-impact security boundary.
 
 Mitigations:
 
 - Deploy on a dedicated host or VM (recommended)
 - Restrict host access and Docker group membership
+- Keep the Docker socket proxy internal-only and limit allowed API endpoints
 - Restrict who can exec into worker containers
 - Keep worker service internal-only (no published ports)
 - Segment network access between components

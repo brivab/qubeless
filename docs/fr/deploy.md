@@ -56,11 +56,14 @@ Les ports suivants doivent être disponibles :
 
 ### Exposition du socket Docker (Worker)
 
-Le worker utilise `/var/run/docker.sock` pour lancer les conteneurs d'analyse. Cette exposition donne au conteneur worker un niveau de contrôle élevé sur l'hôte Docker.
+Le worker se connecte à un service interne `docker-socket-proxy` (via `DOCKER_HOST=tcp://docker-proxy:2375`) pour lancer les conteneurs d'analyse.
+Seul le proxy monte `/var/run/docker.sock` (en lecture seule) et ce service est isolé sur un réseau interne.
+Cette approche réduit l'exposition directe du socket depuis le worker, mais l'accès au daemon Docker reste une frontière de confiance à fort impact.
 
 Mesures recommandées:
 
 - Déployer Qubeless sur un hôte ou une VM dédiée
+- Garder le proxy du socket Docker sur un réseau interne uniquement et limiter les endpoints API Docker autorisés
 - Restreindre strictement l'accès shell au conteneur worker et l'appartenance au groupe Docker
 - Garder le worker non exposé (pas de ports publiés) et segmenter le réseau
 - Durcir l'hôte (patchs OS, services minimaux, contrôle des accès)
@@ -77,6 +80,7 @@ flowchart LR
   REDIS[(Redis<br/>Queue)]
   MINIO[(MinIO<br/>Stockage)]
   WORKER[Worker<br/>Analyseur]
+  DPROXY[(Proxy Socket Docker)]
 
   LB --> WEB
   LB --> API
@@ -84,9 +88,10 @@ flowchart LR
   API --> REDIS
   API --> MINIO
   REDIS --> WORKER
+  WORKER --> DPROXY
 
   classDef stage fill:#ffffff,stroke:#cbd5e1,stroke-width:1.5px,color:#0f172a,rx:10,ry:10;
-  class LB,WEB,API,WORKER stage;
+  class LB,WEB,API,WORKER,DPROXY stage;
 ```
 
 ### Composants
@@ -197,6 +202,7 @@ WORKER_BACKOFF_MS=5000
 ANALYZER_TIMEOUT_MS=600000
 ANALYZER_MEMORY_MB=1024
 ANALYZER_CPU_LIMIT=1
+DOCKER_HOST=tcp://docker-proxy:2375
 LOG_LEVEL=info
 WORKSPACE_PATH=/workspace
 

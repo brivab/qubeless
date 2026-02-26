@@ -31,7 +31,21 @@ export class DockerRunner {
   private docker: Docker;
 
   constructor() {
-    this.docker = new Docker({ socketPath: '/var/run/docker.sock' });
+    const dockerHost = process.env.DOCKER_HOST;
+    if (dockerHost && /^(tcp|http|https):\/\//.test(dockerHost)) {
+      const normalizedHost = dockerHost.replace(/^tcp:\/\//, 'http://');
+      const parsedHost = new URL(normalizedHost);
+      const protocol = parsedHost.protocol === 'https:' ? 'https' : 'http';
+      const defaultPort = protocol === 'https' ? 443 : 2375;
+      this.docker = new Docker({
+        host: parsedHost.hostname,
+        port: Number(parsedHost.port || defaultPort),
+        protocol,
+      });
+      return;
+    }
+
+    this.docker = new Docker({ socketPath: process.env.DOCKER_SOCKET_PATH ?? '/var/run/docker.sock' });
   }
 
   /**
