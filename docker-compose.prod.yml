@@ -1,7 +1,7 @@
 version: "3.9"
 
 services:
-  # PostgreSQL Database (LOCAL ONLY)
+  # PostgreSQL Database
   postgres:
     image: postgres:15-alpine
     container_name: qubeless-postgres
@@ -11,11 +11,9 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?error}
       POSTGRES_DB: ${POSTGRES_DB:-qubeless}
       POSTGRES_INITDB_ARGS: "-E UTF8 --locale=en_US.utf8"
-    ports:
-      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ${DATA_DIR:-.}/backups/postgres:/backups
+      - postgres_backups:/backups
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
       interval: 10s
@@ -33,14 +31,12 @@ services:
           cpus: "1"
           memory: 1G
 
-  # Redis Cache & Queue (LOCAL ONLY)
+  # Redis Cache & Queue
   redis:
     image: redis:7-alpine
     container_name: qubeless-redis
     restart: always
     command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
-    ports:
-      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -60,9 +56,9 @@ services:
           cpus: "0.5"
           memory: 512M
 
-  # MinIO Object Storage (LOCAL ONLY)
+  # MinIO Object Storage
   minio:
-    image: minio/minio:latest
+    image: quay.io/minio/minio:RELEASE.2025-02-18T16-25-55Z
     container_name: qubeless-minio
     restart: always
     environment:
@@ -70,12 +66,9 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?error}
       MINIO_BROWSER_LOGIN_ANIMATION: "off"
     command: server /data --console-address ":9001"
-    ports:
-      - "127.0.0.1:${MINIO_PORT:-9000}:9000"
-      - "127.0.0.1:${MINIO_CONSOLE_PORT:-9001}:9001"
     volumes:
       - minio_data:/data
-      - ${DATA_DIR:-.}/backups/minio:/backups
+      - minio_backups:/backups
     healthcheck:
       test:
         [
@@ -88,6 +81,7 @@ services:
       start_period: 30s
     networks:
       - qubeless-network
+      - dokploy-network
     deploy:
       resources:
         limits:
@@ -97,13 +91,11 @@ services:
           cpus: "0.5"
           memory: 512M
 
-  # API Backend (LOCAL ONLY)
+  # API Backend
   api:
     build:
       context: .
       dockerfile: apps/api/Dockerfile
-      cache_from:
-        - qubeless/api:latest
     image: qubeless/api:${VERSION:-latest}
     container_name: qubeless-api
     restart: always
@@ -174,8 +166,6 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
-    ports:
-      - "127.0.0.1:${API_PORT:-3001}:3001"
     volumes:
       - ./analyzers:/app/analyzers:ro
     cap_drop:
@@ -190,6 +180,7 @@ services:
       start_period: 60s
     networks:
       - qubeless-network
+      - dokploy-network
     deploy:
       resources:
         limits:
@@ -229,8 +220,6 @@ services:
     build:
       context: .
       dockerfile: apps/worker/Dockerfile
-      cache_from:
-        - qubeless/worker:latest
     image: qubeless/worker:${VERSION:-latest}
     container_name: qubeless-worker
     restart: always
@@ -297,24 +286,20 @@ services:
           cpus: "2"
           memory: 2G
 
-  # Web Frontend (LOCAL ONLY)
+  # Web Frontend
   web:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
       args:
         VITE_API_URL: ${VITE_API_URL:?error}
-        WEB_CSP_CONNECT_SRC: "${WEB_CSP_CONNECT_SRC:-https://api.example.com}"
-      cache_from:
-        - qubeless/web:latest
+        WEB_CSP_CONNECT_SRC: "${WEB_CSP_CONNECT_SRC:-${VITE_API_URL}}"
     image: qubeless/web:${VERSION:-latest}
     container_name: qubeless-web
     restart: always
     depends_on:
       api:
         condition: service_healthy
-    ports:
-      - "127.0.0.1:${WEB_PORT:-8081}:8081"
     read_only: true
     tmpfs:
       - /var/cache/nginx
@@ -330,6 +315,7 @@ services:
       start_period: 10s
     networks:
       - qubeless-network
+      - dokploy-network
     deploy:
       resources:
         limits:
@@ -339,24 +325,20 @@ services:
           cpus: "0.5"
           memory: 256M
 
-  # Documentation Site (LOCAL ONLY by default)
+  # Documentation Site
   site:
     build:
       context: .
       dockerfile: apps/site/Dockerfile
       args:
-        VITE_DOMAIN_APP: ${SITE_VITE_DOMAIN_APP:-https://app.example.com}
+        VITE_DOMAIN_APP: ${SITE_VITE_DOMAIN_APP:-${FRONTEND_ORIGIN}}
         VITE_DOCS_URL: ${SITE_VITE_DOCS_URL:-https://docs.example.com}
         VITE_GITHUB_URL: ${SITE_VITE_GITHUB_URL:-https://github.com/qubeless/qubeless-monorepo}
         VITE_SWAGGER_UI_URL: ${SITE_VITE_SWAGGER_UI_URL:-/api/docs}
-        VITE_API_URL: ${SITE_VITE_API_URL:-}
-      cache_from:
-        - qubeless/site:latest
+        VITE_API_URL: ${SITE_VITE_API_URL:-${VITE_API_URL}}
     image: qubeless/site:${VERSION:-latest}
     container_name: qubeless-site
     restart: always
-    ports:
-      - "${SITE_BIND_HOST:-127.0.0.1}:${SITE_PORT:-8082}:8082"
     read_only: true
     tmpfs:
       - /var/cache/nginx
@@ -372,6 +354,7 @@ services:
       start_period: 10s
     networks:
       - qubeless-network
+      - dokploy-network
     deploy:
       resources:
         limits:
@@ -383,25 +366,10 @@ services:
 
 volumes:
   postgres_data:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ${DATA_DIR:-.}/volumes/postgres
-
+  postgres_backups:
   redis_data:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ${DATA_DIR:-.}/volumes/redis
-
   minio_data:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ${DATA_DIR:-.}/volumes/minio
+  minio_backups:
 
 networks:
   qubeless-network:
@@ -409,3 +377,5 @@ networks:
   docker-socket-network:
     driver: bridge
     internal: true
+  dokploy-network:
+    external: true
